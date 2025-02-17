@@ -155,3 +155,8 @@ C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\zh-Hant\Microsoft.CodeAn
 C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\Microsoft.AspNetCore.JsonPatch.dll
+C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
+C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\Newtonsoft.Json.dll
+C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\Newtonsoft.Json.Bson.dll
+C:\Users\akka\Desktop\ecommerce\server\obj\Debug\net9.0\server.sourcelink.json
