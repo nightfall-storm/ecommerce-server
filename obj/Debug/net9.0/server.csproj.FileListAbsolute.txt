@@ -160,3 +160,7 @@ C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\Microsoft.AspNetCore.Mvc
 C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\Newtonsoft.Json.dll
 C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\Newtonsoft.Json.Bson.dll
 C:\Users\akka\Desktop\ecommerce\server\obj\Debug\net9.0\server.sourcelink.json
+C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\BCrypt.Net-Next.dll
+C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\akka\Desktop\ecommerce\server\bin\Debug\net9.0\server.xml
+C:\Users\akka\Desktop\ecommerce\server\obj\Debug\net9.0\server.xml

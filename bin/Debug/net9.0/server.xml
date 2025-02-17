@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>server</name>
+    </assembly>
+    <members>
+        <member name="T:server.Controllers.AuthController">
+            <summary>
+            Controller for handling authentication operations
+            </summary>
+        </member>
+        <member name="M:server.Controllers.AuthController.Register(server.Models.RegisterRequest)">
+            <summary>
+            Register a new user
+            </summary>
+            <param name="request">User registration details</param>
+            <returns>Authentication token and user details</returns>
+        </member>
+        <member name="M:server.Controllers.AuthController.Login(server.Models.LoginRequest)">
+            <summary>
+            Login with existing credentials
+            </summary>
+            <param name="request">Login credentials</param>
+            <returns>Authentication token and user details</returns>
+        </member>
+        <member name="M:server.Controllers.AuthController.GetCurrentUser">
+            <summary>
+            Get current authenticated user's information
+            </summary>
+            <returns>User details</returns>
+        </member>
+        <member name="T:server.Migrations.InitialCreate">
+            <inheritdoc />
+        </member>
+        <member name="M:server.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:server.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:server.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>
