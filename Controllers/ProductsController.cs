@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.JsonPatch;
 using server.Data;
 using server.Models;
 
@@ -47,16 +48,26 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetProduct), new { id = product.ID }, product);
     }
 
-    // PUT: api/Products/5
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateProduct(int id, Product product)
+    // PATCH: api/Products/5
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> PatchProduct(int id, [FromBody] JsonPatchDocument<Product> patchDoc)
     {
-        if (id != product.ID)
+        if (patchDoc == null)
         {
             return BadRequest();
         }
 
-        _context.Entry(product).State = EntityState.Modified;
+        var product = await _context.Products.FindAsync(id);
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        patchDoc.ApplyTo(product, ModelState);
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
 
         try
         {
