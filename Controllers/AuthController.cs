@@ -47,6 +47,12 @@ public class AuthController : ControllerBase
             return BadRequest("Email already registered");
         }
 
+        // Validate role
+        if (!string.IsNullOrEmpty(request.Role) && request.Role != "user" && request.Role != "admin")
+        {
+            return BadRequest("Invalid role. Role must be either 'user' or 'admin'");
+        }
+
         // Create new client
         var client = new Client
         {
@@ -55,7 +61,8 @@ public class AuthController : ControllerBase
             Email = request.Email,
             MotDePasse = _authService.HashPassword(request.MotDePasse),
             Adresse = request.Adresse ?? string.Empty,
-            Telephone = request.Telephone ?? string.Empty
+            Telephone = request.Telephone ?? string.Empty,
+            Role = request.Role ?? "user" // Set default role to "user" if not specified
         };
 
         _context.Clients.Add(client);

@@ -25,6 +25,9 @@ public class Client
 
     public string Telephone { get; set; } = string.Empty;
 
+    [Required]
+    public string Role { get; set; } = "user"; // Default role is "user"
+
     // Navigation property with JSON ignore to prevent circular references
     [JsonIgnore]
     public ICollection<Order> Orders { get; set; } = new List<Order>();

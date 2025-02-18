@@ -21,6 +21,8 @@ public class RegisterRequest
     public string? Adresse { get; set; }
 
     public string? Telephone { get; set; }
+
+    public string Role { get; set; } = "user"; // Default role
 }
 
 public class LoginRequest
