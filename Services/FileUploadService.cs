@@ -32,7 +32,7 @@ public class FileUploadService
         }
 
         // Return relative path for storage in database
-        return $"/uploads/products/{fileName}";
+        return $"/uploads/products/{fileName}";  // This URL will work directly in <img> tags
     }
 
     public void DeleteProductImage(string imageUrl)
