@@ -15,7 +15,7 @@ public class ProductPatchDTO
     public string? Description { get; set; }
     public decimal? Prix { get; set; }
     public int? Stock { get; set; }
-    public string? ImageURL { get; set; }
+    public IFormFile? Image { get; set; }
     public int? CategorieID { get; set; }
 }
 

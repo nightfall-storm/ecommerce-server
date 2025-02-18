@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using server.Data;
 using server.Models;
 using server.Models.DTOs;
+using server.Services;
 
 namespace server.Controllers;
 
@@ -13,10 +14,14 @@ namespace server.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly FileUploadService _fileUploadService;
 
-    public ProductsController(ApplicationDbContext context)
+    public ProductsController(
+        ApplicationDbContext context,
+        FileUploadService fileUploadService)
     {
         _context = context;
+        _fileUploadService = fileUploadService;
     }
 
     // GET: /Products
@@ -41,14 +46,38 @@ public class ProductsController : ControllerBase
         return product;
     }
 
-    // POST: api/Products
+    // POST: /Products
     [HttpPost]
-    public async Task<ActionResult<Product>> CreateProduct(Product product)
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(Product), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<Product>> CreateProduct([FromForm] ProductCreateDTO productDTO)
     {
-        _context.Products.Add(product);
-        await _context.SaveChangesAsync();
+        try
+        {
+            var product = new Product
+            {
+                Nom = productDTO.Nom,
+                Description = productDTO.Description,
+                Prix = productDTO.Prix,
+                Stock = productDTO.Stock,
+                CategorieID = productDTO.CategorieID
+            };
 
-        return CreatedAtAction(nameof(GetProduct), new { id = product.ID }, product);
+            if (productDTO.Image != null)
+            {
+                product.ImageURL = await _fileUploadService.SaveProductImage(productDTO.Image);
+            }
+
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetProduct), new { id = product.ID }, product);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     // PATCH: /Products/5
@@ -57,7 +86,7 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> PatchProduct(int id, [FromBody] ProductPatchDTO patchDTO)
+    public async Task<IActionResult> PatchProduct(int id, [FromForm] ProductPatchDTO patchDTO)
     {
         var product = await _context.Products.FindAsync(id);
         if (product == null)
@@ -65,13 +94,21 @@ public class ProductsController : ControllerBase
             return NotFound();
         }
 
-        // Update only provided fields
+        // Update fields if provided
         if (patchDTO.Nom != null) product.Nom = patchDTO.Nom;
         if (patchDTO.Description != null) product.Description = patchDTO.Description;
         if (patchDTO.Prix != null) product.Prix = patchDTO.Prix.Value;
         if (patchDTO.Stock != null) product.Stock = patchDTO.Stock.Value;
-        if (patchDTO.ImageURL != null) product.ImageURL = patchDTO.ImageURL;
         if (patchDTO.CategorieID != null) product.CategorieID = patchDTO.CategorieID.Value;
+
+        // Handle image update
+        if (patchDTO.Image != null)
+        {
+            // Delete old image if exists
+            _fileUploadService.DeleteProductImage(product.ImageURL);
+            // Save new image
+            product.ImageURL = await _fileUploadService.SaveProductImage(patchDTO.Image);
+        }
 
         try
         {
@@ -89,8 +126,9 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/Products/5
+    // DELETE: /Products/5
     [HttpDelete("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> DeleteProduct(int id)
     {
         var product = await _context.Products.FindAsync(id);
@@ -98,6 +136,9 @@ public class ProductsController : ControllerBase
         {
             return NotFound();
         }
+
+        // Delete product image if exists
+        _fileUploadService.DeleteProductImage(product.ImageURL);
 
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();

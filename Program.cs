@@ -6,6 +6,7 @@ using System.Text;
 using System.Reflection;
 using server.Data;
 using server.Services;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -120,6 +121,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Register AuthService
 builder.Services.AddScoped<AuthService>();
 
+// Add this line with your other service registrations
+builder.Services.AddScoped<FileUploadService>();
+
 // Add database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -149,6 +153,21 @@ app.UseCors(x => x
 // Authentication must be before Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Create uploads directory if it doesn't exist
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
+// Configure static files
+app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
 
 app.MapControllers();
 
