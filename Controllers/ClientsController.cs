@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Authorization;
 using server.Data;
 using server.Models;
+using server.Models.DTOs;
 
 namespace server.Controllers;
 
@@ -26,16 +28,57 @@ public class ClientsController : ControllerBase
 
     // GET: api/Clients/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<Client>> GetClient(int id)
+    [AllowAnonymous]
+    public async Task<ActionResult<ClientDTO>> GetClient(int id)
     {
-        var client = await _context.Clients.FindAsync(id);
+        var client = await _context.Clients
+            .Include(c => c.Orders)
+                .ThenInclude(o => o.OrderDetails)
+                    .ThenInclude(od => od.Product)
+            .FirstOrDefaultAsync(c => c.ID == id);
 
         if (client == null)
         {
             return NotFound();
         }
 
-        return client;
+        var clientDto = new ClientDTO
+        {
+            ID = client.ID,
+            Nom = client.Nom,
+            Prenom = client.Prenom,
+            Email = client.Email,
+            Adresse = client.Adresse,
+            Telephone = client.Telephone,
+            Orders = client.Orders.Select(o => new OrderDTO
+            {
+                ID = o.ID,
+                ClientID = o.ClientID,
+                DateCommande = o.DateCommande,
+                Statut = o.Statut,
+                Total = o.Total,
+                OrderDetails = o.OrderDetails.Select(od => new OrderDetailDTO
+                {
+                    ID = od.ID,
+                    CommandeID = od.CommandeID,
+                    ProduitID = od.ProduitID,
+                    Quantite = od.Quantite,
+                    PrixUnitaire = od.PrixUnitaire,
+                    Product = od.Product == null ? null : new ProductDTO
+                    {
+                        ID = od.Product.ID,
+                        Nom = od.Product.Nom,
+                        Description = od.Product.Description,
+                        Prix = od.Product.Prix,
+                        Stock = od.Product.Stock,
+                        ImageURL = od.Product.ImageURL,
+                        CategorieID = od.Product.CategorieID
+                    }
+                }).ToList()
+            }).ToList()
+        };
+
+        return clientDto;
     }
 
     // POST: api/Clients
