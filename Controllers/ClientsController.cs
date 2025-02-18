@@ -93,11 +93,15 @@ public class ClientsController : ControllerBase
 
     // PATCH: api/Clients/5
     [HttpPatch("{id}")]
-    public async Task<IActionResult> PatchClient(int id, [FromBody] JsonPatchDocument<Client> patchDoc)
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PatchClient(int id, [FromBody] ClientPatchDTO patchDTO)
     {
-        if (patchDoc == null)
+        if (patchDTO == null)
         {
-            return BadRequest();
+            return BadRequest("Request body cannot be empty");
         }
 
         var client = await _context.Clients.FindAsync(id);
@@ -106,11 +110,12 @@ public class ClientsController : ControllerBase
             return NotFound();
         }
 
-        patchDoc.ApplyTo(client, ModelState);
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
+        // Update only provided fields
+        if (patchDTO.Nom != null) client.Nom = patchDTO.Nom;
+        if (patchDTO.Prenom != null) client.Prenom = patchDTO.Prenom;
+        if (patchDTO.Email != null) client.Email = patchDTO.Email;
+        if (patchDTO.Adresse != null) client.Adresse = patchDTO.Adresse;
+        if (patchDTO.Telephone != null) client.Telephone = patchDTO.Telephone;
 
         try
         {
@@ -122,10 +127,7 @@ public class ClientsController : ControllerBase
             {
                 return NotFound();
             }
-            else
-            {
-                throw;
-            }
+            throw;
         }
 
         return NoContent();

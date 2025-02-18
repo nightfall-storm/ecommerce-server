@@ -70,26 +70,23 @@ public class OrdersController : ControllerBase
         return CreatedAtAction(nameof(GetOrder), new { id = order.ID }, order);
     }
 
-    // PATCH: api/Orders/5
+    // PATCH: /Orders/5
     [HttpPatch("{id}")]
-    public async Task<IActionResult> PatchOrder(int id, [FromBody] JsonPatchDocument<Order> patchDoc)
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PatchOrder(int id, [FromBody] OrderPatchDTO patchDTO)
     {
-        if (patchDoc == null)
-        {
-            return BadRequest();
-        }
-
         var order = await _context.Orders.FindAsync(id);
         if (order == null)
         {
             return NotFound();
         }
 
-        patchDoc.ApplyTo(order, ModelState);
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
+        // Update only provided fields
+        if (patchDTO.Statut != null) order.Statut = patchDTO.Statut;
+        if (patchDTO.Total != null) order.Total = patchDTO.Total.Value;
 
         try
         {
@@ -101,10 +98,7 @@ public class OrdersController : ControllerBase
             {
                 return NotFound();
             }
-            else
-            {
-                throw;
-            }
+            throw;
         }
 
         return NoContent();

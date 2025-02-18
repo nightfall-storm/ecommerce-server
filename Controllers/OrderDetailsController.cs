@@ -192,46 +192,46 @@ public class OrderDetailsController : ControllerBase
         return CreatedAtAction(nameof(GetOrderDetail), new { id = orderDetail.ID }, dto);
     }
 
-    // PATCH: api/OrderDetails/5
+    // PATCH: /OrderDetails/5
     [HttpPatch("{id}")]
-    public async Task<IActionResult> PatchOrderDetail(int id, [FromBody] JsonPatchDocument<OrderDetail> patchDoc)
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PatchOrderDetail(int id, [FromBody] OrderDetailPatchDTO patchDTO)
     {
-        if (patchDoc == null)
-        {
-            return BadRequest();
-        }
+        var orderDetail = await _context.OrderDetails
+            .Include(od => od.Product)
+            .FirstOrDefaultAsync(od => od.ID == id);
 
-        var orderDetail = await _context.OrderDetails.FindAsync(id);
         if (orderDetail == null)
         {
             return NotFound();
         }
 
-        // Store original quantity for stock calculation
-        int originalQuantity = orderDetail.Quantite;
-
-        patchDoc.ApplyTo(orderDetail, ModelState);
-        if (!ModelState.IsValid)
+        if (patchDTO.Quantite != null)
         {
-            return BadRequest(ModelState);
-        }
+            // Calculate stock difference
+            int quantityDifference = patchDTO.Quantite.Value - orderDetail.Quantite;
 
-        // If quantity was changed, update product stock
-        if (originalQuantity != orderDetail.Quantite)
-        {
-            var product = await _context.Products.FindAsync(orderDetail.ProduitID);
-            if (product == null)
-            {
-                return BadRequest("Invalid product ID");
-            }
-
-            int quantityDifference = orderDetail.Quantite - originalQuantity;
-            if (product.Stock < quantityDifference)
+            // Check if we have enough stock
+            if (orderDetail.Product != null && orderDetail.Product.Stock < quantityDifference)
             {
                 return BadRequest("Insufficient stock");
             }
 
-            product.Stock -= quantityDifference;
+            // Update stock
+            if (orderDetail.Product != null)
+            {
+                orderDetail.Product.Stock -= quantityDifference;
+            }
+
+            orderDetail.Quantite = patchDTO.Quantite.Value;
+        }
+
+        if (patchDTO.PrixUnitaire != null)
+        {
+            orderDetail.PrixUnitaire = patchDTO.PrixUnitaire.Value;
         }
 
         try
@@ -244,10 +244,7 @@ public class OrderDetailsController : ControllerBase
             {
                 return NotFound();
             }
-            else
-            {
-                throw;
-            }
+            throw;
         }
 
         return NoContent();

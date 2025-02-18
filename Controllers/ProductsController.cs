@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Authorization;
 using server.Data;
 using server.Models;
+using server.Models.DTOs;
 
 namespace server.Controllers;
 
@@ -50,26 +51,27 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetProduct), new { id = product.ID }, product);
     }
 
-    // PATCH: api/Products/5
+    // PATCH: /Products/5
     [HttpPatch("{id}")]
-    public async Task<IActionResult> PatchProduct(int id, [FromBody] JsonPatchDocument<Product> patchDoc)
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PatchProduct(int id, [FromBody] ProductPatchDTO patchDTO)
     {
-        if (patchDoc == null)
-        {
-            return BadRequest();
-        }
-
         var product = await _context.Products.FindAsync(id);
         if (product == null)
         {
             return NotFound();
         }
 
-        patchDoc.ApplyTo(product, ModelState);
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
+        // Update only provided fields
+        if (patchDTO.Nom != null) product.Nom = patchDTO.Nom;
+        if (patchDTO.Description != null) product.Description = patchDTO.Description;
+        if (patchDTO.Prix != null) product.Prix = patchDTO.Prix.Value;
+        if (patchDTO.Stock != null) product.Stock = patchDTO.Stock.Value;
+        if (patchDTO.ImageURL != null) product.ImageURL = patchDTO.ImageURL;
+        if (patchDTO.CategorieID != null) product.CategorieID = patchDTO.CategorieID.Value;
 
         try
         {
@@ -81,10 +83,7 @@ public class ProductsController : ControllerBase
             {
                 return NotFound();
             }
-            else
-            {
-                throw;
-            }
+            throw;
         }
 
         return NoContent();
