@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
 
 namespace server.Models;
 
@@ -22,6 +23,7 @@ public class OrderDetail
     public decimal PrixUnitaire { get; set; }
 
     // Navigation properties
+    [JsonIgnore]
     public Order? Order { get; set; }
     public Product? Product { get; set; }
 }

@@ -29,6 +29,33 @@
             </summary>
             <returns>User details</returns>
         </member>
+        <member name="M:server.Controllers.OrderDetailsController.GetOrderDetails">
+            <summary>
+            Gets all order details
+            </summary>
+            <returns>A list of order details with their associated products</returns>
+        </member>
+        <member name="M:server.Controllers.OrderDetailsController.GetOrderDetail(System.Int32)">
+            <summary>
+            Gets a specific order detail by ID
+            </summary>
+            <param name="id">The ID of the order detail to retrieve</param>
+            <returns>The order detail with its associated product</returns>
+        </member>
+        <member name="M:server.Controllers.OrderDetailsController.GetOrderDetailsByOrder(System.Int32)">
+            <summary>
+            Gets all order details for a specific order
+            </summary>
+            <param name="orderId">The ID of the order to get details for</param>
+            <returns>A list of order details with their associated products</returns>
+        </member>
+        <member name="M:server.Controllers.OrderDetailsController.CreateOrderDetail(server.Models.OrderDetail)">
+            <summary>
+            Creates a new order detail
+            </summary>
+            <param name="orderDetail">The order detail to create</param>
+            <returns>The newly created order detail</returns>
+        </member>
         <member name="T:server.Migrations.InitialCreate">
             <inheritdoc />
         </member>

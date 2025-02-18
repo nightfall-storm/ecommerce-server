@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace server.Models;
 
@@ -26,7 +26,6 @@ public class Product
 
     public int CategorieID { get; set; }
 
-    // Ignore this property when serializing to avoid circular references
     [JsonIgnore]
     public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 }

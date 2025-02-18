@@ -1,13 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Authorization;
 using server.Data;
 using server.Models;
+using server.Models.DTOs;
 
 namespace server.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
+[Tags("Order Details")]
 public class OrderDetailsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -17,18 +20,49 @@ public class OrderDetailsController : ControllerBase
         _context = context;
     }
 
-    // GET: api/OrderDetails
+    /// <summary>
+    /// Gets all order details
+    /// </summary>
+    /// <returns>A list of order details with their associated products</returns>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<OrderDetail>>> GetOrderDetails()
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<OrderDetailDTO>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<OrderDetailDTO>>> GetOrderDetails()
     {
-        return await _context.OrderDetails
+        var orderDetails = await _context.OrderDetails
             .Include(od => od.Product)
             .ToListAsync();
+
+        return orderDetails.Select(od => new OrderDetailDTO
+        {
+            ID = od.ID,
+            CommandeID = od.CommandeID,
+            ProduitID = od.ProduitID,
+            Quantite = od.Quantite,
+            PrixUnitaire = od.PrixUnitaire,
+            Product = od.Product == null ? null : new ProductDTO
+            {
+                ID = od.Product.ID,
+                Nom = od.Product.Nom,
+                Description = od.Product.Description,
+                Prix = od.Product.Prix,
+                Stock = od.Product.Stock,
+                ImageURL = od.Product.ImageURL,
+                CategorieID = od.Product.CategorieID
+            }
+        }).ToList();
     }
 
-    // GET: api/OrderDetails/5
+    /// <summary>
+    /// Gets a specific order detail by ID
+    /// </summary>
+    /// <param name="id">The ID of the order detail to retrieve</param>
+    /// <returns>The order detail with its associated product</returns>
     [HttpGet("{id}")]
-    public async Task<ActionResult<OrderDetail>> GetOrderDetail(int id)
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(OrderDetailDTO), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<OrderDetailDTO>> GetOrderDetail(int id)
     {
         var orderDetail = await _context.OrderDetails
             .Include(od => od.Product)
@@ -39,22 +73,71 @@ public class OrderDetailsController : ControllerBase
             return NotFound();
         }
 
-        return orderDetail;
+        return new OrderDetailDTO
+        {
+            ID = orderDetail.ID,
+            CommandeID = orderDetail.CommandeID,
+            ProduitID = orderDetail.ProduitID,
+            Quantite = orderDetail.Quantite,
+            PrixUnitaire = orderDetail.PrixUnitaire,
+            Product = orderDetail.Product == null ? null : new ProductDTO
+            {
+                ID = orderDetail.Product.ID,
+                Nom = orderDetail.Product.Nom,
+                Description = orderDetail.Product.Description,
+                Prix = orderDetail.Product.Prix,
+                Stock = orderDetail.Product.Stock,
+                ImageURL = orderDetail.Product.ImageURL,
+                CategorieID = orderDetail.Product.CategorieID
+            }
+        };
     }
 
-    // GET: api/OrderDetails/Order/5
+    /// <summary>
+    /// Gets all order details for a specific order
+    /// </summary>
+    /// <param name="orderId">The ID of the order to get details for</param>
+    /// <returns>A list of order details with their associated products</returns>
     [HttpGet("Order/{orderId}")]
-    public async Task<ActionResult<IEnumerable<OrderDetail>>> GetOrderDetailsByOrder(int orderId)
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<OrderDetailDTO>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<OrderDetailDTO>>> GetOrderDetailsByOrder(int orderId)
     {
-        return await _context.OrderDetails
+        var orderDetails = await _context.OrderDetails
             .Include(od => od.Product)
             .Where(od => od.CommandeID == orderId)
             .ToListAsync();
+
+        return orderDetails.Select(od => new OrderDetailDTO
+        {
+            ID = od.ID,
+            CommandeID = od.CommandeID,
+            ProduitID = od.ProduitID,
+            Quantite = od.Quantite,
+            PrixUnitaire = od.PrixUnitaire,
+            Product = od.Product == null ? null : new ProductDTO
+            {
+                ID = od.Product.ID,
+                Nom = od.Product.Nom,
+                Description = od.Product.Description,
+                Prix = od.Product.Prix,
+                Stock = od.Product.Stock,
+                ImageURL = od.Product.ImageURL,
+                CategorieID = od.Product.CategorieID
+            }
+        }).ToList();
     }
 
-    // POST: api/OrderDetails
+    /// <summary>
+    /// Creates a new order detail
+    /// </summary>
+    /// <param name="orderDetail">The order detail to create</param>
+    /// <returns>The newly created order detail</returns>
     [HttpPost]
-    public async Task<ActionResult<OrderDetail>> CreateOrderDetail(OrderDetail orderDetail)
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(OrderDetailDTO), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<OrderDetailDTO>> CreateOrderDetail(OrderDetail orderDetail)
     {
         // Get the product to validate and set the unit price
         var product = await _context.Products.FindAsync(orderDetail.ProduitID);
@@ -75,10 +158,38 @@ public class OrderDetailsController : ControllerBase
         // Update product stock
         product.Stock -= orderDetail.Quantite;
 
+        // Clear the navigation property before adding
+        orderDetail.Product = null;
+
         _context.OrderDetails.Add(orderDetail);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetOrderDetail), new { id = orderDetail.ID }, orderDetail);
+        // Load the product for the response
+        await _context.Entry(orderDetail)
+            .Reference(od => od.Product)
+            .LoadAsync();
+
+        // Convert to DTO for response
+        var dto = new OrderDetailDTO
+        {
+            ID = orderDetail.ID,
+            CommandeID = orderDetail.CommandeID,
+            ProduitID = orderDetail.ProduitID,
+            Quantite = orderDetail.Quantite,
+            PrixUnitaire = orderDetail.PrixUnitaire,
+            Product = orderDetail.Product == null ? null : new ProductDTO
+            {
+                ID = orderDetail.Product.ID,
+                Nom = orderDetail.Product.Nom,
+                Description = orderDetail.Product.Description,
+                Prix = orderDetail.Product.Prix,
+                Stock = orderDetail.Product.Stock,
+                ImageURL = orderDetail.Product.ImageURL,
+                CategorieID = orderDetail.Product.CategorieID
+            }
+        };
+
+        return CreatedAtAction(nameof(GetOrderDetail), new { id = orderDetail.ID }, dto);
     }
 
     // PATCH: api/OrderDetails/5

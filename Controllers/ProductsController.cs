@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Authorization;
 using server.Data;
 using server.Models;
 
 namespace server.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class ProductsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -17,8 +18,9 @@ public class ProductsController : ControllerBase
         _context = context;
     }
 
-    // GET: api/Products
+    // GET: /Products
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
     {
         return await _context.Products.ToListAsync();
