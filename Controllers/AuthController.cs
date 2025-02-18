@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using server.Models.DTOs;
 
 namespace server.Controllers;
 
@@ -111,56 +112,81 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Get current authenticated user's information
+    /// Get current authenticated user's information with order statistics
     /// </summary>
-    /// <returns>User details</returns>
+    /// <returns>User details and order statistics</returns>
     [Authorize]
     [HttpGet("me")]
-    [ProducesResponseType(typeof(Client), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserStatsDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<Client>> GetCurrentUser()
+    public async Task<ActionResult<UserStatsDTO>> GetCurrentUser()
     {
         try
         {
-            _logger.LogInformation("GetCurrentUser called. User Claims: {Claims}",
-                string.Join(", ", User.Claims.Select(c => $"{c.Type}: {c.Value}")));
-
-            _logger.LogInformation("Authorization Header: {Auth}",
-                HttpContext.Request.Headers["Authorization"].ToString());
-
             if (!User.Identity?.IsAuthenticated ?? true)
             {
                 _logger.LogWarning("User is not authenticated");
                 return Unauthorized("User is not authenticated");
             }
 
-            // Try to find the user ID from multiple possible claim types
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
-                        User.FindFirst("sub")?.Value;
-
-            if (userId == null)
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null || !int.TryParse(userId, out int userIdInt))
             {
-                _logger.LogWarning("No user ID claim found in the token");
-                return Unauthorized("No user ID claim found in the token");
-            }
-
-            _logger.LogInformation("Found user ID: {UserId}", userId);
-
-            if (!int.TryParse(userId, out int userIdInt))
-            {
-                _logger.LogWarning("Failed to parse user ID: {UserId}", userId);
+                _logger.LogWarning("Invalid user ID in token");
                 return BadRequest("Invalid user ID format");
             }
 
-            var client = await _context.Clients.FindAsync(userIdInt);
+            var client = await _context.Clients
+                .Include(c => c.Orders)
+                    .ThenInclude(o => o.OrderDetails)
+                .FirstOrDefaultAsync(c => c.ID == userIdInt);
+
             if (client == null)
             {
                 _logger.LogWarning("No client found with ID: {UserId}", userIdInt);
                 return NotFound($"No user found with ID: {userIdInt}");
             }
 
-            _logger.LogInformation("Successfully retrieved user: {UserId}", userIdInt);
-            return client;
+            // Calculate order statistics
+            var orders = client.Orders.ToList();
+            var orderDetails = orders.SelectMany(o => o.OrderDetails).ToList();
+
+            var userStats = new UserStatsDTO
+            {
+                ID = client.ID,
+                Nom = client.Nom,
+                Prenom = client.Prenom,
+                Email = client.Email,
+                Adresse = client.Adresse,
+                Telephone = client.Telephone,
+                Role = client.Role,
+
+                // Order statistics
+                TotalOrders = orders.Count,
+                TotalSpent = orders.Sum(o => o.Total),
+                TotalProductsBought = orderDetails.Sum(od => od.Quantite),
+                OrdersByStatus = orders.GroupBy(o => o.Statut)
+                                     .ToDictionary(g => g.Key, g => g.Count()),
+                LastOrderDate = orders.Any() ?
+                    orders.Max(o => o.DateCommande) : null,
+
+                // Get 5 most recent orders
+                RecentOrders = orders
+                    .OrderByDescending(o => o.DateCommande)
+                    .Take(5)
+                    .Select(o => new RecentOrderDTO
+                    {
+                        ID = o.ID,
+                        DateCommande = o.DateCommande,
+                        Statut = o.Statut,
+                        Total = o.Total,
+                        NumberOfItems = o.OrderDetails.Sum(od => od.Quantite)
+                    })
+                    .ToList()
+            };
+
+            _logger.LogInformation("Successfully retrieved user stats for: {UserId}", userIdInt);
+            return userStats;
         }
         catch (Exception ex)
         {

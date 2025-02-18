@@ -25,9 +25,9 @@
         </member>
         <member name="M:server.Controllers.AuthController.GetCurrentUser">
             <summary>
-            Get current authenticated user's information
+            Get current authenticated user's information with order statistics
             </summary>
-            <returns>User details</returns>
+            <returns>User details and order statistics</returns>
         </member>
         <member name="M:server.Controllers.OrderDetailsController.GetOrderDetails">
             <summary>
