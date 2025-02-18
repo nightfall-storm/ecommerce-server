@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Authorization;
 using server.Data;
 using server.Models;
+using server.Models.DTOs;
 
 namespace server.Controllers;
 
@@ -108,9 +110,13 @@ public class OrdersController : ControllerBase
         return NoContent();
     }
 
-    // PATCH: api/Orders/5/status
+    // PATCH: /Orders/{id}/status
     [HttpPatch("{id}/status")]
-    public async Task<IActionResult> PatchOrderStatus(int id, [FromBody] string status)
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] OrderStatusUpdateDTO statusUpdate)
     {
         var order = await _context.Orders.FindAsync(id);
 
@@ -119,7 +125,12 @@ public class OrdersController : ControllerBase
             return NotFound();
         }
 
-        order.Statut = status;
+        if (string.IsNullOrEmpty(statusUpdate.Status))
+        {
+            return BadRequest("Status cannot be empty");
+        }
+
+        order.Statut = statusUpdate.Status;
         await _context.SaveChangesAsync();
 
         return NoContent();
