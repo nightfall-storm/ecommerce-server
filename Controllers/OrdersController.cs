@@ -72,10 +72,12 @@ public class OrdersController : ControllerBase
 
     // PATCH: /Orders/5
     [HttpPatch("{id}")]
-    [AllowAnonymous]
+    [Authorize(Roles = "admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> PatchOrder(int id, [FromBody] OrderPatchDTO patchDTO)
     {
         var order = await _context.Orders.FindAsync(id);
@@ -106,10 +108,12 @@ public class OrdersController : ControllerBase
 
     // PATCH: /Orders/{id}/status
     [HttpPatch("{id}/status")]
-    [AllowAnonymous]
+    [Authorize(Roles = "admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] OrderStatusUpdateDTO statusUpdate)
     {
         var order = await _context.Orders.FindAsync(id);
@@ -132,6 +136,11 @@ public class OrdersController : ControllerBase
 
     // DELETE: api/Orders/5
     [HttpDelete("{id}")]
+    [Authorize(Roles = "admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> DeleteOrder(int id)
     {
         var order = await _context.Orders
