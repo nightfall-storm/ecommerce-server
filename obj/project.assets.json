@@ -5169,19 +5169,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\akka\\.nuget\\packages\\": {}
+    "C:\\Users\\HP-PRO\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\akka\\Desktop\\ecommerce\\server\\server.csproj",
+      "projectUniqueName": "C:\\Users\\HP-PRO\\Desktop\\New folder (2)\\ecommerce-server\\server.csproj",
       "projectName": "server",
-      "projectPath": "C:\\Users\\akka\\Desktop\\ecommerce\\server\\server.csproj",
-      "packagesPath": "C:\\Users\\akka\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\akka\\Desktop\\ecommerce\\server\\obj\\",
+      "projectPath": "C:\\Users\\HP-PRO\\Desktop\\New folder (2)\\ecommerce-server\\server.csproj",
+      "packagesPath": "C:\\Users\\HP-PRO\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\HP-PRO\\Desktop\\New folder (2)\\ecommerce-server\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\akka\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\HP-PRO\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"

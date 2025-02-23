@@ -27,9 +27,23 @@ public class ProductsController : ControllerBase
     // GET: /Products
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+    public async Task<ActionResult<IEnumerable<Product>>> GetProducts([FromQuery] int? categoryId = null, [FromQuery] string? searchTerm = null)
     {
-        return await _context.Products.ToListAsync();
+        var query = _context.Products.AsQueryable();
+
+        // Filter by category if provided
+        if (categoryId.HasValue)
+        {
+            query = query.Where(p => p.CategorieID == categoryId.Value);
+        }
+
+        // Search by name or description if provided
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(p => p.Nom.Contains(searchTerm) || p.Description.Contains(searchTerm));
+        }
+
+        return await query.ToListAsync();
     }
 
     // GET: api/Products/5

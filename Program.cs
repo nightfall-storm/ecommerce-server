@@ -178,12 +178,13 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-        context.Database.Migrate();
+        context.Database.Migrate(); // This ensures the database is created and all migrations are applied
+        DbInitializer.Initialize(context); // This will seed the database if it's empty
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
+        logger.LogError(ex, "An error occurred while migrating or initializing the database.");
     }
 }
 
